@@ -1,21 +1,25 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import ContactsForm from './components/ContactsForm'
 import FilterSearch from './components/FilterSearch'
 import Contacts from './components/Contacts'
+import axios from 'axios'
 
 
 
 
 const App = () => {
-  const [persons, setPersons] = useState([
-        { name: 'Arto Hellas', phone: '040-123456', id: 1 },
-        { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
-        { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
-        { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
-      ])
+  const [persons, setPersons] = useState([])
   const [newName , setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newSearch, setNewSearch] = useState('')
+
+  useEffect(() =>{
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response =>{
+        setPersons(response.data)
+      })
+  }, [])
   
   const handleSearchChange = (event) =>{
     setNewSearch(event.target.value)
@@ -31,7 +35,8 @@ const App = () => {
     } else {
         const contactObject = {
         name: newName,
-        phone: newPhone
+        phone: newPhone,
+        id: persons.length +1
         
       }
       setPersons(persons.concat(contactObject))

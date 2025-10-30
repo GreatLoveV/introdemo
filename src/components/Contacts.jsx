@@ -1,8 +1,8 @@
 import Contact from "./Contact";
 const Contacts = ({persons}) => {
     return(
-        persons.map(person => <Contact key={person.phone} name={person.name} phone={person.phone}/>)
+        persons.map(person => <Contact key={person.id} name={person.name} phone={person.phone}/>)
     )
 }
 
-export default Contacts 
+export default Contacts
