@@ -1,7 +1,15 @@
 import Contact from "./Contact";
-const Contacts = ({persons}) => {
+const Contacts = ({persons, onDelete}) => {
     return(
-        persons.map(person => <Contact key={person.id} name={person.name} phone={person.phone}/>)
+        persons.map(person => 
+            <Contact key={person.id}
+            name={person.name}
+            number={person.number}
+            onDelete={()=>{
+                if(window.confirm(`Delete ${person.name}?`)){
+                    onDelete(person.id)
+                }
+            }}/>)
     )
 }
 

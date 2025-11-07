@@ -2,23 +2,20 @@ import {useState, useEffect} from 'react'
 import ContactsForm from './components/ContactsForm'
 import FilterSearch from './components/FilterSearch'
 import Contacts from './components/Contacts'
-import axios from 'axios'
-
-
-
+import personaServer from './services/persona'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName , setNewName] = useState('')
-  const [newPhone, setNewPhone] = useState('')
+  const [newNumber, setNewNumber] = useState('')
   const [newSearch, setNewSearch] = useState('')
 
   useEffect(() =>{
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response =>{
-        setPersons(response.data)
-      })
+      personaServer
+        .getAll()
+        .then(initialPersons =>{
+          setPersons(initialPersons)
+        })
   }, [])
   
   const handleSearchChange = (event) =>{
@@ -26,46 +23,72 @@ const App = () => {
   }
   const addContact = (event) =>{
     event.preventDefault()
-    const existingContact = persons.some(person => person.name === newName ||  person.phone === newPhone) 
-
-    if (existingContact){
-      alert('contact is already added to phonebook')
-    } else if (!newName || !newPhone){
-      alert(`both fields are required`)
-    } else {
-        const contactObject = {
+    const existingContact = persons.find(person => person.name === newName) 
+    const contactObject = {
         name: newName,
-        phone: newPhone,
-        id: persons.length +1
-        
+        number: newNumber,
       }
-      setPersons(persons.concat(contactObject))
-      
+    if (!newName || !newNumber){
+      alert(`both fields are required`)
+      return
+    } 
+    if (existingContact){
+      // alert('contact is already added to phonebook')
+      if (window.confirm(`${newName} is already added to the phonebook, replace the old number with the new one?`)){
+          personaServer
+            .update(existingContact.id, contactObject)
+            .then(returnedContact =>{
+              setPersons(persons.map(person => 
+                person.id === existingContact.id ? returnedContact : person
+              ))
+            setNewName('')
+            setNewNumber('')
+            })
+            .catch(error => {console.error('Update failed:', error)})
+          }
+      }else {  
+      personaServer
+        .create(contactObject)
+        .then(returnedContact =>{
+          setPersons(prev => prev.concat(returnedContact)) 
+          setNewName('')
+          setNewNumber('')
+        })
+        .catch(error => console.error('create failed', error))
     }
-    setNewName('')
-    setNewPhone('')
   }  
 
   const handleNameChange = (event) => {
   setNewName(event.target.value)
   }
-  const handlePhoneChange = (event) =>{
-    setNewPhone(event.target.value)
+  const handleNumberChange = (event) =>{
+    setNewNumber(event.target.value)
 
   }
+  const handleContactDelete = (id) => {
+    personaServer
+      .remove(id)
+      .then(() =>{
+        setPersons(prev => prev.filter(p => p.id !== id))
+      })
+      .catch(error => {
+        console.error('Delete failed', error)
+      })
+  }
   const filteredPersons = newSearch ?
-    persons.filter(person => person.name.toLowerCase().includes(newSearch.toLowerCase()) || person.phone.includes(newSearch))
+    persons.filter(person => person.name.toLowerCase().includes(newSearch.toLowerCase()) || person.number.includes(newSearch))
     :persons
+    
   return (
     <div>
       <h2>Phonebook</h2>
       <div>
         debug: {newName}
       </div>
-      <ContactsForm onSubmit={addContact} newName={newName} onNameChange={handleNameChange} newPhone={newPhone} onPhoneChange={handlePhoneChange}/>
+      <ContactsForm onSubmit={addContact} newName={newName} onNameChange={handleNameChange} newNumber={newNumber} onNumberChange={handleNumberChange}/>
       <h2>Contacts</h2>
-      <FilterSearch FilteredSearch = {newSearch} onSearchChange = {handleSearchChange}/>
-      <Contacts persons = {filteredPersons} />
+      <FilterSearch filteredSearch = {newSearch} onSearchChange = {handleSearchChange}/>
+      <Contacts persons = {filteredPersons} onDelete={handleContactDelete}/>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-const ContactsForm = ({onSubmit, newName, onNameChange, newPhone, onPhoneChange}) =>{
+const ContactsForm = ({onSubmit, newName, onNameChange, newNumber, onNumberChange}) =>{
 
     return (
         <form onSubmit={onSubmit}>
@@ -6,7 +6,7 @@ const ContactsForm = ({onSubmit, newName, onNameChange, newPhone, onPhoneChange}
                 name: <input value={newName} onChange={onNameChange} />
             </div>
             <div>
-                phone: <input value={newPhone} onChange={onPhoneChange} />
+                number: <input value={newNumber} onChange={onNumberChange} />
             </div>
             <div>
                 <button type="submit">add</button>
