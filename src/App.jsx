@@ -2,13 +2,16 @@ import {useState, useEffect} from 'react'
 import ContactsForm from './components/ContactsForm'
 import FilterSearch from './components/FilterSearch'
 import Contacts from './components/Contacts'
+import Notification from './components/Notification'
 import personaServer from './services/persona'
+
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName , setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newSearch, setNewSearch] = useState('')
+  const [update, setUpdate] = useState({message:null, type:null})
 
   useEffect(() =>{
       personaServer
@@ -41,16 +44,27 @@ const App = () => {
               setPersons(persons.map(person => 
                 person.id === existingContact.id ? returnedContact : person
               ))
+            setUpdate({message : `Updated ${newName}`, type:'success'})
+            setTimeout(()=> setUpdate({message: null, type:null}), 5000)
             setNewName('')
             setNewNumber('')
             })
-            .catch(error => {console.error('Update failed:', error)})
+            .catch(error => {
+              console.error('Update failed:', error)
+              setUpdate({message:`Information of ${newName} has already been deleted from server`, type:'error'})
+              setTimeout(()=> setUpdate({message: null, type:null}), 5000)
+              setPersons(persons.filter(person =>
+                person.id !== existingContact.id
+              ))
+            })
           }
       }else {  
       personaServer
         .create(contactObject)
         .then(returnedContact =>{
-          setPersons(prev => prev.concat(returnedContact)) 
+          setPersons(prev => prev.concat(returnedContact))
+          setUpdate({message:`Added ${newName}`, type:'success'}) 
+          setTimeout(()=> setUpdate({message: null, type:null}), 5000)
           setNewName('')
           setNewNumber('')
         })
@@ -82,6 +96,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={update}/>
       <div>
         debug: {newName}
       </div>
